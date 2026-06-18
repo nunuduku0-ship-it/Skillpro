@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skillpro | Үл Хөдлөх Хөрөнгө</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
     <style>
         .custom-modal { z-index: 99999 !important; }
         .leaflet-container { z-index: 1 !important; }
@@ -23,505 +25,450 @@
             </h1>
             <div class="flex items-center gap-4">
                 <button id="filter-fav-btn" onclick="window.toggleFavoriteFilter()" class="bg-blue-800 hover:bg-blue-900 px-3 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 border border-blue-500/30 cursor-pointer">
-                    <i class="fa-solid fa-heart text-red-400" id="fav-nav-icon"></i> <span id="fav-btn-text">Хадгалсан</span>
+                    <i class="fa-solid fa-heart text-red-400" id="fav-nav-icon"></i> <span id="fav-text">Хадгалсан</span>
                 </button>
-                <div id="auth-status">
-                    <button onclick="window.toggleAuthModal()" class="bg-yellow-500 text-slate-900 px-3 py-1.5 rounded-xl font-bold text-xs cursor-pointer">Нэвтрэх</button>
-                </div>
+                <div id="auth-section" class="flex items-center gap-2"></div>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div class="space-y-6 lg:col-span-1">
-            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700">
-                <h3 class="text-sm font-bold mb-3 text-blue-400 uppercase tracking-wider"><i class="fa-solid fa-filter"></i> Хайлт / Шүүлтүүр</h3>
-                <div class="space-y-3">
-                    <div>
-                        <label class="text-xs font-semibold text-slate-400 uppercase">Төрөл</label>
-                        <select id="search-type" onchange="window.applyFilters()" class="w-full mt-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white">
-                            <option value="all">Бүгд</option>
-                            <option value="Түрээслүүлнэ">Түрээслүүлнэ</option>
-                            <option value="Зарагдана">Зарагдана</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-semibold text-slate-400 uppercase">Өрөөний тоо</label>
-                        <select id="search-rooms" onchange="window.applyFilters()" class="w-full mt-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white">
-                            <option value="all">Хамаагүй</option>
-                            <option value="1">1 өрөө</option>
-                            <option value="2">2 өрөө</option>
-                            <option value="3">3 өрөө</option>
-                            <option value="4">4+ өрөө</option>
-                        </select>
-                    </div>
+    <div class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <aside class="lg:col-span-4 space-y-6">
+            <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl shadow-xl space-y-4">
+                <h3 class="font-bold text-lg flex items-center gap-2 text-blue-400"><i class="fa-solid fa-sliders"></i> Шүүлтүүр</h3>
+                <div>
+                    <label class="text-xs text-slate-400 font-semibold block mb-1">ӨРӨӨНИЙ ТОО</label>
+                    <select id="filter-rooms" onchange="window.renderListings()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none text-slate-200">
+                        <option value="all">Хамаагүй</option>
+                        <option value="1">1 өрөө</option>
+                        <option value="2">2 өрөө</option>
+                        <option value="3">3 өрөө</option>
+                        <option value="4+">4+ өрөө</option>
+                    </select>
                 </div>
             </div>
 
-            <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700">
-                <h2 id="form-title" class="text-lg font-extrabold mb-4"><i class="fa-solid fa-circle-plus text-blue-400"></i> <span>Шинэ зар бүртгэх</span></h2>
-                <form id="apt-form" class="space-y-4">
-                    <input type="hidden" id="edit-id" value="">
+            <div id="add-listing-card" class="bg-slate-800 border border-slate-700 p-5 rounded-2xl shadow-xl space-y-4 hidden">
+                <h3 class="font-bold text-lg flex items-center gap-2 text-blue-400"><i class="fa-solid fa-circle-plus"></i> Шинэ зар бүртгэх</h3>
+                <form id="listing-form" onsubmit="window.handleCreateListing(event)" class="space-y-3">
                     <div>
-                        <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Төрөл сонгох</label>
-                        <select id="apt-type" onchange="window.onTypeChange()" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white" required>
-                            <option value="Түрээслүүлнэ">🔑 Түрээслүүлнэ</option>
-                            <option value="Зарагдана">💰 Зарагдана</option>
+                        <label class="text-xs text-slate-400 font-semibold block mb-1">ТӨРӨЛ СОНГОХ</label>
+                        <select id="form-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none text-slate-200">
+                            <option value="Rent">🔑 Түрээслүүлнэ</option>
+                            <option value="Sale">💰 Худалдана</option>
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Байрны нэр / Гарчиг</label>
-                        <input type="text" id="apt-name" placeholder="Жишээ: Натур байр, Хангай хотхон..." class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white" required>
+                        <label class="text-xs text-slate-400 font-semibold block mb-1">БАЙРНЫ НЭР / ГАРЧИГ</label>
+                        <input type="text" id="form-title" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none text-slate-200">
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Байршил / Хаяг</label>
-                        <input type="text" id="apt-address" placeholder="Жишээ: БЗД, 26-р хороо..." class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white" required>
+                        <label class="text-xs text-slate-400 font-semibold block mb-1">БАЙРШИЛ / ХАЯГ</label>
+                        <input type="text" id="form-address" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none text-slate-200">
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Газрын зураг дээр зоох</label>
-                        <button type="button" onclick="window.openMapPickModal()" class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 py-2.5 px-4 rounded-xl text-xs font-bold border border-slate-600 flex items-center justify-center gap-2 transition cursor-pointer">
-                            <i class="fa-solid fa-map-location-dot text-blue-400 text-sm"></i> 
-                            <span id="map-btn-status">Газрын зураг дээр байршил заах</span>
+                        <label class="text-xs text-slate-400 font-semibold block mb-1">БҮТЭН ТАЙЛБАР</label>
+                        <textarea id="form-description" rows="3" placeholder="Байрны давуу тал, орчин тойрны мэдээлэл..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none text-slate-200"></textarea>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 font-semibold block mb-1">ГАЗРЫН ЗУРАГ ДЭЭР ЗООХ</label>
+                        <button type="button" onclick="window.openMapModal()" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition border border-slate-600 cursor-pointer">
+                            <i class="fa-solid fa-map-location-dot"></i> <span id="map-btn-text">Байршил сонгох</span>
                         </button>
-                        <input type="hidden" id="apt-lat"><input type="hidden" id="apt-lng">
                     </div>
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="text-xs font-semibold text-slate-400">ӨРӨӨ</label>
-                            <input type="number" id="apt-rooms" value="1" class="w-full mt-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white" required>
+                            <label class="text-xs text-slate-400 font-semibold block mb-1">ӨРӨӨ</label>
+                            <input type="number" id="form-rooms" required min="1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none text-slate-200">
                         </div>
                         <div>
-                            <label class="text-xs font-semibold text-slate-400">ТАЛБАЙ (М²)</label>
-                            <input type="number" id="apt-area" value="50" class="w-full mt-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white" required>
+                            <label class="text-xs text-slate-400 font-semibold block mb-1">ТАЛБАЙ (М²)</label>
+                            <input type="number" id="form-area" required min="1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none text-slate-200">
                         </div>
                     </div>
                     <div>
-                        <label class="text-xs font-semibold text-slate-400">ҮНЭ (₮)</label>
-                        <input type="number" id="apt-price" placeholder="Үнэ оруулна уу" class="w-full mt-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white" required>
+                        <label class="text-xs text-slate-400 font-semibold block mb-1">ҮНЭ (₮)</label>
+                        <input type="number" id="form-price" required min="1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none text-slate-200">
                     </div>
                     <div>
-                        <label class="text-xs font-semibold text-slate-400">УТАСНЫ ДУГААР</label>
-                        <input type="text" id="apt-phone" placeholder="Холбоо барих утас" class="w-full mt-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white" required>
+                        <label class="text-xs text-slate-400 font-semibold block mb-1">УТАСНЫ ДУГААР</label>
+                        <input type="text" id="form-phone" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none text-slate-200">
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-slate-400 uppercase block mb-1">Зураг оруулах (Макс 10)</label>
-                        <input type="file" id="apt-images" accept="image/*" multiple class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-900 file:text-blue-200 hover:file:bg-blue-800 cursor-pointer">
+                        <label class="text-xs text-slate-400 font-semibold block mb-1">ЗУРАГ ОРУУЛАХ (МАКС 10)</label>
+                        <input type="file" id="form-images" multiple accept="image/*" class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer cursor-pointer">
                     </div>
-                    <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-sm disabled:opacity-50 cursor-pointer">Нэмэх</button>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition duration-200 text-sm cursor-pointer">Нэмэх</button>
                 </form>
             </div>
-        </div>
+        </aside>
 
-        <div class="lg:col-span-3 space-y-4">
-            <div class="bg-slate-800 p-3 rounded-2xl border border-slate-700 font-bold text-sm text-blue-400">
-                Нийт зар: <span id="total-count-badge" class="text-white bg-blue-600 px-2 py-0.5 rounded-md ml-1">0</span>
-            </div>
-            <div id="apartments-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-            <div id="no-results" class="hidden text-center py-12 bg-slate-800 rounded-2xl"><p class="text-slate-400">Зар олдсонгүй.</p></div>
-        </div>
-    </main>
+        <main class="lg:col-span-8">
+            <div id="listings-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        </main>
+    </div>
 
-    <div id="map-pick-modal" class="fixed inset-0 bg-slate-950/80 hidden items-center justify-center custom-modal p-4 backdrop-blur-sm">
-        <div class="bg-slate-800 rounded-3xl max-w-3xl w-full h-[80vh] flex flex-col overflow-hidden shadow-2xl relative border border-slate-700">
-            <div class="p-4 border-b border-slate-700 flex justify-between items-center">
-                <h3 class="font-extrabold text-base text-white"><i class="fa-solid fa-map-pin text-red-500 mr-1"></i> Газрын зураг дээр байршил заах</h3>
-                <button type="button" onclick="window.closeMapPickModal()" class="text-slate-400 hover:text-white text-lg p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+    <!-- MAP MODAL -->
+    <div id="map-modal" class="fixed inset-0 bg-black/70 custom-modal hidden items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl border border-slate-700 flex flex-col h-[80vh]">
+            <div class="px-5 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
+                <h3 class="font-bold text-lg flex items-center gap-2 text-blue-400"><i class="fa-solid fa-map-pin"></i> Газрын зураг дээр байршил заах</h3>
+                <button onclick="window.closeMapModal()" class="text-slate-400 hover:text-white transition cursor-pointer"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <div id="form-map" class="w-full flex-1 bg-slate-900"></div>
-            <div class="p-4 border-t border-slate-700 bg-slate-900/50 flex justify-end">
-                <button type="button" onclick="window.closeMapPickModal()" class="bg-blue-600 text-white font-bold px-6 py-2 rounded-xl text-xs shadow hover:bg-blue-700 transition cursor-pointer">Байршлыг хадгалах</button>
+            <div class="flex-1 relative bg-slate-900">
+                <div id="map" class="absolute inset-0 w-full h-full"></div>
+            </div>
+            <div class="p-4 border-t border-slate-700 bg-slate-800/50 flex justify-end gap-3">
+                <button onclick="window.closeMapModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-sm font-semibold transition cursor-pointer">Цуцлах</button>
+                <button onclick="window.confirmMapLocation()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-semibold transition shadow-md cursor-pointer">Байршил сонгох</button>
             </div>
         </div>
     </div>
 
-    <div id="auth-modal" class="fixed inset-0 bg-slate-950/70 hidden items-center justify-center custom-modal p-4 backdrop-blur-sm">
-        <div class="bg-slate-800 rounded-3xl max-w-md w-full p-6 relative border border-slate-700">
-            <button onclick="window.toggleAuthModal()" class="absolute top-4 right-4 text-slate-400 text-lg hover:text-white p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
-            <h2 id="auth-title" class="text-xl font-black mb-4 text-center text-white">Нэвтрэх</h2>
-            <div id="form-alert" class="hidden p-3 bg-red-900/50 text-red-200 border border-red-700 rounded-xl text-xs mb-3"></div>
-            <form id="auth-form" class="space-y-4">
-                <input type="email" id="auth-email" placeholder="Имэйл хаяг" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white" required>
-                <input type="password" id="auth-password" placeholder="Нууц үг" class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white" required>
-                <button type="submit" id="auth-submit-btn" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer">Нэвтрэх</button>
+    <!-- AUTH MODAL -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/70 custom-modal hidden items-center justify-center p-4">
+        <div class="bg-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl border border-slate-700 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 id="auth-modal-title" class="font-bold text-xl text-blue-400">Нэвтрэх</h3>
+                <button onclick="window.closeAuthModal()" class="text-slate-400 hover:text-white transition cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="auth-form" onsubmit="window.handleAuth(event)" class="space-y-3">
+                <div>
+                    <label class="text-xs text-slate-400 font-semibold block mb-1">ИМЭЙЛ ХАЯГ</label>
+                    <input type="email" id="auth-email" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none text-slate-200">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 font-semibold block mb-1">НУУЦ ҮГ</label>
+                    <input type="password" id="auth-password" required minlength="6" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none text-slate-200">
+                </div>
+                <button type="submit" id="auth-submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl shadow-lg transition text-sm cursor-pointer">Нэвтрэх</button>
             </form>
-            <div class="mt-4 text-center text-xs text-slate-400">
-                <span id="auth-toggle-text">Бүртгэл байхгүй юу?</span>
-                <button onclick="window.switchAuthMode()" id="auth-toggle-btn" class="text-blue-400 font-bold ml-1 cursor-pointer">Бүртгүүлэх</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="detail-modal" class="fixed inset-0 bg-slate-950/80 hidden items-center justify-center custom-modal p-4 backdrop-blur-md">
-        <div class="bg-slate-800 rounded-3xl max-w-5xl w-full h-[90vh] md:h-[85vh] overflow-hidden relative flex flex-col md:flex-row shadow-2xl border border-slate-700">
-            <button onclick="window.closeDetailModal()" class="absolute top-4 right-4 bg-black/60 text-white w-10 h-10 rounded-full flex items-center justify-center text-lg z-50 hover:bg-black/80 transition cursor-pointer">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <div class="w-full md:w-1/2 h-1/2 md:h-full bg-slate-950 relative flex items-center justify-center overflow-hidden">
-                <div id="modal-slider" class="w-full h-full flex transition-transform duration-300 ease-in-out"></div>
-                <button id="modal-prev-btn" class="absolute left-4 bg-black/40 text-white w-10 h-10 rounded-full flex items-center justify-center z-10"><i class="fa-solid fa-chevron-left"></i></button>
-                <button id="modal-next-btn" class="absolute right-4 bg-black/40 text-white w-10 h-10 rounded-full flex items-center justify-center z-10"><i class="fa-solid fa-chevron-right"></i></button>
-                <span id="modal-photo-count" class="absolute bottom-4 left-4 bg-black/60 text-white text-xs font-bold px-3 py-1 rounded-full z-10">1/1</span>
-            </div>
-            <div class="w-full md:w-1/2 h-1/2 md:h-full p-6 flex flex-col justify-between overflow-y-auto border-t md:border-t-0 md:border-l border-slate-700">
-                <div class="space-y-4">
-                    <div>
-                        <span id="modal-badge" class="text-[10px] font-black px-2.5 py-1 rounded-full text-white uppercase shadow-sm"></span>
-                        <h2 id="modal-title" class="text-xl font-black mt-2 text-white"></h2>
-                        <p id="modal-price" class="text-2xl font-black text-blue-400 mt-1"></p>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 text-center text-xs font-bold text-slate-300">
-                        <div class="bg-slate-700/50 p-2 rounded-xl"><p class="text-slate-400 text-[10px] uppercase font-medium">Өрөөний тоо</p><span id="modal-rooms" class="text-sm"></span></div>
-                        <div class="bg-slate-700/50 p-2 rounded-xl"><p class="text-slate-400 text-[10px] uppercase font-medium">Талбай</p><span id="modal-area" class="text-sm"></span></div>
-                    </div>
-                    <div class="text-xs bg-slate-700/30 p-3 rounded-xl">
-                        <p class="text-slate-400 font-bold uppercase text-[10px] mb-1"><i class="fa-solid fa-location-dot text-blue-400"></i> Хаяг байршил</p>
-                        <p id="modal-address" class="text-slate-200 font-semibold mb-2"></p>
-                        <div id="view-map" class="w-full h-44 bg-slate-900 rounded-xl overflow-hidden shadow-inner"></div>
-                    </div>
-                </div>
-                <div class="pt-4 border-t border-slate-700 mt-4">
-                    <a id="modal-phone-link" href="#" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-2xl text-center flex items-center justify-center gap-2 transition"><i class="fa-solid fa-phone"></i> Холбоо барих: <span id="modal-phone"></span></a>
-                </div>
+            <div class="text-center pt-2">
+                <button onclick="window.toggleAuthMode()" id="auth-toggle-btn" class="text-xs text-blue-400 hover:underline cursor-pointer">Шинэ бүртгэл үүсгэх</button>
             </div>
         </div>
     </div>
 
     <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-        const SUPABASE_URL = 'https://hoggxzvtlicaxoiyxnvv.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_NrUX1EvZn1ZAXNdeDwQgkw_DT78oeRE';
+        const SUPABASE_URL = "https://hoggxzvtlicaxoiyxnvv.supabase.co"
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvZ2d4enZ0bGljYXhvaXl4bnZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTg3MDc2OTEsImV4cCI6MjAzNDI4MzY5MX0.bC1S9D8h_v7bWn-y1E_xZ_gE4y_O0_U4e_6e6b_8e6b"
 
-        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
-        let currentUser = null;
-        let isSignUpMode = false;
-        let allApartments = [];
-        let favoriteIds = JSON.parse(localStorage.getItem('fav_apts')) || [];
-        let showFavoritesOnly = false;
-        let modalImages = [];
-        let currentModalImageIndex = 0;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-        let formMap = null, formMarker = null;
-        let viewMap = null, viewMarker = null;
-        const DEFAULT_CENTER = [47.9188, 106.9176]; 
+        let currentUser = null
+        let listings = []
+        let favorites = []
+        let filterFavoritesOnly = false
 
-        const authStatus = document.getElementById('auth-status');
-        const authModal = document.getElementById('auth-modal');
-        const authForm = document.getElementById('auth-form');
-        const formAlert = document.getElementById('form-alert');
-        const grid = document.getElementById('apartments-grid');
-        const noResults = document.getElementById('no-results');
-        const aptForm = document.getElementById('apt-form');
+        let map, marker
+        let selectedLat = 47.9188
+        let selectedLng = 106.9176
+        let tempLat = null, tempLng = null
 
-        window.openMapPickModal = function() {
-            document.getElementById('map-pick-modal').classList.remove('hidden');
-            document.getElementById('map-pick-modal').classList.add('flex');
-            setTimeout(() => {
-                if (!formMap) {
-                    formMap = L.map('form-map').setView(DEFAULT_CENTER, 13);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(formMap);
-                    formMap.on('click', (e) => setFormMarker(e.latlng.lat, e.latlng.lng));
-                } else { formMap.invalidateSize(); }
-                const savedLat = document.getElementById('apt-lat').value;
-                const savedLng = document.getElementById('apt-lng').value;
-                if (savedLat && savedLng) {
-                    formMap.setView([savedLat, savedLng], 15);
-                    setFormMarker(parseFloat(savedLat), parseFloat(savedLng));
-                }
-            }, 200);
+        // INIT
+        async function init() {
+            const { data: { session } } = await supabase.auth.getSession()
+            setUser(session?.user || null)
+
+            supabase.auth.onAuthStateChange((_event, session) => {
+                setUser(session?.user || null)
+            })
+
+            initMap()
+            await fetchListings()
+            loadFavorites()
+            renderListings()
         }
 
-        window.closeMapPickModal = function() {
-            document.getElementById('map-pick-modal').classList.add('hidden');
-            document.getElementById('map-pick-modal').classList.remove('flex');
-        }
+        function setUser(user) {
+            currentUser = user
+            const authSection = document.getElementById('auth-section')
+            const addListingCard = document.getElementById('add-listing-card')
 
-        function setFormMarker(lat, lng) {
-            if (formMarker) { formMarker.setLatLng([lat, lng]); } 
-            else {
-                formMarker = L.marker([lat, lng], { draggable: true }).addTo(formMap);
-                formMarker.on('dragend', (e) => {
-                    document.getElementById('apt-lat').value = e.target.getLatLng().lat;
-                    document.getElementById('apt-lng').value = e.target.getLatLng().lng;
-                });
-            }
-            document.getElementById('apt-lat').value = lat;
-            document.getElementById('apt-lng').value = lng;
-            document.getElementById('map-btn-status').innerHTML = `<i class="fa-solid fa-circle-check text-green-400"></i> Байршил сонгогдсон`;
-        }
-
-        supabaseClient.auth.onAuthStateChange((event, session) => {
-            currentUser = session?.user || null;
-            updateAuthUI();
-            fetchApartments();
-        });
-
-        function updateAuthUI() {
-            if (currentUser) {
-                authStatus.innerHTML = `<div class="flex items-center gap-2 bg-slate-700 px-3 py-1 rounded-xl text-xs border border-slate-600"><span class="truncate max-w-[100px] font-semibold text-slate-200">${currentUser.email}</span><button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded font-bold cursor-pointer">Гарах</button></div>`;
-                document.getElementById('logout-btn').onclick = async () => { await supabaseClient.auth.signOut(); window.location.reload(); };
+            if (user) {
+                authSection.innerHTML = `
+                    <span class="text-xs text-slate-300 max-w-[120px] truncate font-medium bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl">${user.email}</span>
+                    <button onclick="window.handleLogout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-xl text-sm font-semibold transition cursor-pointer">Гарах</button>
+                `
+                addListingCard.classList.remove('hidden')
             } else {
-                authStatus.innerHTML = `<button onclick="window.toggleAuthModal()" class="bg-yellow-500 hover:bg-yellow-600 text-slate-900 px-4 py-2 rounded-xl font-bold text-xs shadow-sm cursor-pointer">Нэвтрэх</button>`;
+                authSection.innerHTML = `
+                    <button onclick="window.openAuthModal('login')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition shadow-md cursor-pointer">Нэвтрэх</button>
+                `
+                addListingCard.classList.add('hidden')
             }
+            renderListings()
         }
 
-        window.toggleAuthModal = function() {
-            authModal.classList.toggle('hidden');
-            if(!authModal.classList.contains('hidden')) authModal.classList.add('flex');
-            formAlert.classList.add('hidden');
+        // MAP FUNCTIONS
+        function initMap() {
+            map = L.map('map').setView([selectedLat, selectedLng], 13)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
+
+            marker = L.marker([selectedLat, selectedLng], { draggable: true }).addTo(map)
+
+            map.on('click', (e) => {
+                tempLat = e.latlng.lat
+                tempLng = e.latlng.lng
+                marker.setLatLng(e.latlng)
+            })
+
+            marker.on('dragend', () => {
+                const pos = marker.getLatLng()
+                tempLat = pos.lat
+                tempLng = pos.lng
+            })
         }
 
-        window.switchAuthMode = function() {
-            isSignUpMode = !isSignUpMode;
-            document.getElementById('auth-title').innerText = isSignUpMode ? "Бүртгүүлэх" : "Нэвтрэх";
-            document.getElementById('auth-submit-btn').innerText = isSignUpMode ? "Бүртгүүлэх" : "Нэвтрэх";
-            document.getElementById('auth-toggle-btn').innerText = isSignUpMode ? "Нэвтрэх" : "Бүртгүүлэх";
-        }
-
-        authForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            formAlert.classList.add('hidden');
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value;
-            try {
-                if (isSignUpMode) {
-                    const { error } = await supabaseClient.auth.signUp({ email, password });
-                    if (error) throw error;
-                    alert('Амжилттай бүртгэгдлээ!');
-                } else {
-                    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                    if (error) throw error;
-                }
-                window.toggleAuthModal();
-            } catch (err) {
-                formAlert.innerText = err.message;
-                formAlert.classList.remove('hidden');
-            }
-        });
-
-        async function fetchApartments() {
-            try {
-                const { data, error } = await supabaseClient.from('apartments').select('*').order('created_at', { ascending: false });
-                if (error) throw error;
-                allApartments = data || [];
-                window.applyFilters();
-            } catch (err) { console.error(err.message); }
-        }
-
-        window.applyFilters = function() {
-            let filtered = [...allApartments];
-            
-            const searchType = document.getElementById('search-type').value;
-            if (searchType !== 'all') filtered = filtered.filter(apt => apt.type === searchType);
-            
-            if (showFavoritesOnly) filtered = filtered.filter(apt => favoriteIds.includes(apt.id));
-            
-            const rooms = document.getElementById('search-rooms').value;
-            if (rooms !== 'all') filtered = filtered.filter(apt => apt.rooms == rooms);
-            
-            document.getElementById('total-count-badge').innerText = filtered.length;
-            renderGrid(filtered);
-        }
-
-        window.toggleFavorite = function(id, e) {
-            e.stopPropagation();
-            favoriteIds = favoriteIds.includes(id) ? favoriteIds.filter(f => f !== id) : [...favoriteIds, id];
-            localStorage.setItem('fav_apts', JSON.stringify(favoriteIds));
-            window.applyFilters();
-        }
-
-        window.toggleFavoriteFilter = function() {
-            showFavoritesOnly = !showFavoritesOnly;
-            document.getElementById('filter-fav-btn').classList.toggle('bg-red-500');
-            document.getElementById('fav-btn-text').innerText = showFavoritesOnly ? "Бүгд" : "Хадгалсан";
-            window.applyFilters();
-        }
-
-        function renderGrid(data) {
-            grid.innerHTML = '';
-            if (data.length === 0) { noResults.classList.remove('hidden'); return; }
-            noResults.classList.add('hidden');
-
-            data.forEach(apt => {
-                const isFav = favoriteIds.includes(apt.id);
-                const isOwner = currentUser && apt.user_id === currentUser.id;
-                let imgs = [];
-                if (apt.image_url) {
-                    try { imgs = JSON.parse(apt.image_url); if (!Array.isArray(imgs)) imgs = [apt.image_url]; } catch(e) { imgs = apt.image_url.split(','); }
-                }
-                if (imgs.length === 0 || imgs[0] === "") imgs = ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=400'];
-
-                const card = document.createElement('div');
-                card.className = "bg-slate-800 rounded-3xl overflow-hidden border border-slate-700/60 p-4 relative flex flex-col justify-between cursor-pointer hover:border-slate-500 transition duration-200";
-                card.onclick = () => window.openDetailModal(apt);
-
-                card.innerHTML = `
-                    <div class="relative h-48 bg-slate-900 rounded-2xl overflow-hidden mb-3 flex items-center">
-                        <img src="${imgs[0].trim()}" class="w-full h-full object-cover">
-                        <span class="absolute top-3 left-3 text-[10px] font-black px-2.5 py-1 rounded-full text-white uppercase shadow-sm z-20 ${apt.type==='Зарагдана'?'bg-emerald-500':'bg-orange-500'}">${apt.type}</span>
-                        <button onclick="window.toggleFavorite(${apt.id}, event)" class="absolute top-3 right-3 bg-slate-900/80 p-2 rounded-full shadow z-20 hover:scale-105 transition cursor-pointer">
-                            <i class="${isFav ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart text-slate-400'}"></i>
-                        </button>
-                    </div>
-                    <div class="mt-1 flex-1 flex flex-col">
-                        <h4 class="font-bold text-base truncate mb-0.5 text-white">${apt.name}</h4>
-                        <p class="text-blue-400 font-black text-base mb-1.5">${Number(apt.price).toLocaleString()} ₮</p>
-                        <p class="text-[11px] text-slate-400 truncate mb-2"><i class="fa-solid fa-location-dot text-blue-400"></i> ${apt.address}</p>
-                        <div class="flex gap-2 text-[11px] text-slate-300 bg-slate-700 px-2 py-1 rounded-lg mb-2 font-semibold w-max">
-                            <span>${apt.rooms} өрөө</span> | <span>${apt.area} м²</span>
-                        </div>
-                    </div>
-                    <div class="flex justify-between items-center border-t pt-2.5 mt-auto border-slate-700">
-                        <span class="text-xs text-slate-300 font-bold"><i class="fa-solid fa-phone text-blue-400 mr-0.5"></i> ${apt.phone}</span>
-                        ${isOwner ? `<div class="flex gap-1" onclick="event.stopPropagation();">
-                            <button id="del-btn-${apt.id}" class="text-[11px] bg-red-500 text-white px-2 py-1 rounded-md font-bold hover:bg-red-600 cursor-pointer">Устгах</button>
-                        </div>`:''}
-                    </div>`;
-                grid.appendChild(card);
-
-                if(isOwner) {
-                    document.getElementById(`del-btn-${apt.id}`).onclick = () => window.deleteApartment(apt.id);
-                }
-            });
-        }
-
-        window.openDetailModal = function(apt) {
-            document.getElementById('modal-title').innerText = apt.name;
-            document.getElementById('modal-price').innerText = `${Number(apt.price).toLocaleString()} ₮`;
-            document.getElementById('modal-rooms').innerText = `${apt.rooms} өрөө`;
-            document.getElementById('modal-area').innerText = `${apt.area} м²`;
-            document.getElementById('modal-address').innerText = apt.address;
-            document.getElementById('modal-phone').innerText = apt.phone;
-            document.getElementById('modal-phone-link').href = `tel:${apt.phone}`;
-
-            const badge = document.getElementById('modal-badge');
-            badge.innerText = apt.type;
-            badge.className = `text-[10px] font-black px-2.5 py-1 rounded-full text-white uppercase shadow-sm ${apt.type === 'Зарагдана' ? 'bg-emerald-500' : 'bg-orange-500'}`;
-
-            if (apt.image_url) {
-                try { modalImages = JSON.parse(apt.image_url); if (!Array.isArray(modalImages)) modalImages = [apt.image_url]; } catch(e) { modalImages = apt.image_url.split(','); }
-            }
-            if (modalImages.length === 0 || modalImages[0] === "") modalImages = ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=800'];
-
-            currentModalImageIndex = 0;
-            renderModalImages();
-
-            document.getElementById('detail-modal').classList.remove('hidden');
-            document.getElementById('detail-modal').classList.add('flex');
-
+        window.openMapModal = () => {
+            document.getElementById('map-modal').classList.remove('hidden')
+            document.getElementById('map-modal').classList.add('flex')
+            tempLat = selectedLat
+            tempLng = selectedLng
             setTimeout(() => {
-                if (!viewMap) {
-                    viewMap = L.map('view-map').setView(DEFAULT_CENTER, 14);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(viewMap);
-                } else { viewMap.invalidateSize(); }
-
-                if (apt.lat && apt.lng) {
-                    const pos = [apt.lat, apt.lng];
-                    viewMap.setView(pos, 16); 
-                    if (viewMarker) viewMarker.setLatLng(pos);
-                    else viewMarker = L.marker(pos).addTo(viewMap);
-                } else {
-                    if (viewMarker) viewMap.removeLayer(viewMarker);
-                    viewMarker = null;
-                    viewMap.setView(DEFAULT_CENTER, 12);
-                }
-            }, 200);
+                map.invalidateSize()
+                map.setView([selectedLat, selectedLng], 13)
+                marker.setLatLng([selectedLat, selectedLng])
+            }, 200)
         }
 
-        function renderModalImages() {
-            const slider = document.getElementById('modal-slider');
-            slider.innerHTML = '';
-            modalImages.forEach(url => {
-                const img = document.createElement('img');
-                img.src = url.trim();
-                img.className = "w-full h-full object-contain flex-shrink-0 bg-slate-950";
-                slider.appendChild(img);
-            });
-            document.getElementById('modal-prev-btn').style.display = modalImages.length > 1 ? 'flex' : 'none';
-            document.getElementById('modal-next-btn').style.display = modalImages.length > 1 ? 'flex' : 'none';
-            updateModalSliderPosition();
+        window.closeMapModal = () => {
+            document.getElementById('map-modal').classList.add('hidden')
+            document.getElementById('map-modal').classList.remove('flex')
         }
 
-        function updateModalSliderPosition() {
-            document.getElementById('modal-slider').style.transform = `translateX(-${currentModalImageIndex * 100}%)`;
-            document.getElementById('modal-photo-count').innerText = `${currentModalImageIndex + 1}/${modalImages.length}`;
+        window.confirmMapLocation = () => {
+            selectedLat = tempLat
+            selectedLng = tempLng
+            document.getElementById('map-btn-text').innerText = "✅ Байршил сонгогдсон"
+            window.closeMapModal()
         }
 
-        document.getElementById('modal-prev-btn').onclick = (e) => {
-            e.stopPropagation();
-            currentModalImageIndex = (currentModalImageIndex === 0) ? modalImages.length - 1 : currentModalImageIndex - 1;
-            updateModalSliderPosition();
-        };
-
-        document.getElementById('modal-next-btn').onclick = (e) => {
-            e.stopPropagation();
-            currentModalImageIndex = (currentModalImageIndex === modalImages.length - 1) ? 0 : currentModalImageIndex + 1;
-            updateModalSliderPosition();
-        };
-
-        window.closeDetailModal = function() {
-            document.getElementById('detail-modal').classList.add('hidden');
-            document.getElementById('detail-modal').classList.remove('flex');
+        // AUTH
+        let authMode = 'login'
+        window.openAuthModal = (mode = 'login') => {
+            authMode = mode
+            document.getElementById('auth-modal').classList.remove('hidden')
+            document.getElementById('auth-modal').classList.add('flex')
+            updateAuthModalUI()
         }
 
-        aptForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!currentUser) { alert('Зар нэмэхийн тулд нэвтрэх шаардлагатай!'); return; }
-            const submitBtn = document.getElementById('submit-btn');
-            submitBtn.disabled = true;
+        window.closeAuthModal = () => {
+            document.getElementById('auth-modal').classList.add('hidden')
+            document.getElementById('auth-modal').classList.remove('flex')
+        }
 
-            const fileInput = document.getElementById('apt-images');
-            let uploadedUrls = [];
+        window.toggleAuthMode = () => {
+            authMode = authMode === 'login' ? 'signup' : 'login'
+            updateAuthModalUI()
+        }
 
-            if (fileInput.files.length > 0) {
-                const files = Array.from(fileInput.files).slice(0, 10);
-                for (let file of files) {
-                    const fileExt = file.name.split('.').pop();
-                    const fileName = `${Math.random()}_${Date.now()}.${fileExt}`;
-                    const filePath = `${currentUser.id}/${fileName}`;
-                    const { error: uploadError } = await supabaseClient.storage.from('apartments').upload(filePath, file);
-                    if (!uploadError) {
-                        const { data: publicUrlData } = supabaseClient.storage.from('apartments').getPublicUrl(filePath);
-                        uploadedUrls.push(publicUrlData.publicUrl);
+        function updateAuthModalUI() {
+            document.getElementById('auth-modal-title').innerText = authMode === 'login' ? 'Нэвтрэх' : 'Бүртгүүлэх'
+            document.getElementById('auth-submit-btn').innerText = authMode === 'login' ? 'Нэвтрэх' : 'Бүртгэл үүсгэх'
+            document.getElementById('auth-toggle-btn').innerText = authMode === 'login' ? 'Шинэ бүртгэл үүсгэх' : 'Надад бүртгэл байгаа, нэвтрэх'
+        }
+
+        window.handleAuth = async (e) => {
+            e.preventDefault()
+            const email = document.getElementById('auth-email').value
+            const password = document.getElementById('auth-password').value
+
+            let error
+            if (authMode === 'login') {
+                ({ error } = await supabase.auth.signInWithPassword({ email, password }))
+            } else {
+                ({ error } = await supabase.auth.signUp({ email, password }))
+                if (!error) alert('Бүртгэл амжилттай! Имэйлээ шалгаж баталгаажуулна уу.')
+            }
+
+            if (error) alert(error.message)
+            else window.closeAuthModal()
+        }
+
+        window.handleLogout = async () => {
+            await supabase.auth.signOut()
+        }
+
+        // DATA FLOW
+        async function fetchListings() {
+            const { data, error } = await supabase.from('listings').select('*').order('created_at', { ascending: false })
+            if (error) console.error(error)
+            else listings = data || []
+        }
+
+        window.handleCreateListing = async (e) => {
+            e.preventDefault()
+            if (!currentUser) return alert('Та нэвтэрсэн байх шаардлагатай!')
+
+            const title = document.getElementById('form-title').value
+            const address = document.getElementById('form-address').value
+            const description = document.getElementById('form-description').value
+            const type = document.getElementById('form-type').value
+            const rooms = parseInt(document.getElementById('form-rooms').value)
+            const area = parseInt(document.getElementById('form-area').value)
+            const price = parseInt(document.getElementById('form-price').value)
+            const phone = document.getElementById('form-phone').value
+            const imageFiles = document.getElementById('form-images').files
+
+            let imageUrls = []
+
+            if (imageFiles.length > 0) {
+                for (let i = 0; i < Math.min(imageFiles.length, 10); i++) {
+                    const file = imageFiles[i]
+                    const fileExt = file.name.split('.').pop()
+                    const fileName = `${Date.now()}_${i}.${fileExt}`
+                    
+                    const { error: uploadError } = await supabase.storage
+                        .from('apartments')
+                        .upload(fileName, file)
+
+                    if (uploadError) {
+                        console.error(uploadError)
+                    } else {
+                        const { data: publicUrlData } = supabase.storage
+                            .from('apartments')
+                            .getPublicUrl(fileName)
+                        imageUrls.push(publicUrlData.publicUrl)
                     }
                 }
             }
 
-            const latVal = document.getElementById('apt-lat').value;
-            const lngVal = document.getElementById('apt-lng').value;
+            if (imageUrls.length === 0) {
+                imageUrls.push('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80')
+            }
 
-            const aptData = {
-                type: document.getElementById('apt-type').value,
-                name: document.getElementById('apt-name').value,
-                address: document.getElementById('apt-address').value,
-                rooms: parseInt(document.getElementById('apt-rooms').value),
-                area: parseInt(document.getElementById('apt-area').value),
-                price: parseFloat(document.getElementById('apt-price').value),
-                phone: document.getElementById('apt-phone').value,
-                lat: latVal ? parseFloat(latVal) : null,
-                lng: lngVal ? parseFloat(lngVal) : null,
+            const { error } = await supabase.from('listings').insert([{
                 user_id: currentUser.id,
-                image_url: JSON.stringify(uploadedUrls)
-            };
+                title,
+                address,
+                description,
+                type,
+                rooms,
+                area,
+                price,
+                phone,
+                images: imageUrls,
+                lat: selectedLat,
+                lng: selectedLng
+            }])
 
-            try {
-                const { error } = await supabaseClient.from('apartments').insert([aptData]);
-                if(error) throw error;
-                aptForm.reset();
-                document.getElementById('map-btn-status').innerText = "Газрын зураг дээр байршил заах";
-                if (formMarker && formMap) { formMap.removeLayer(formMarker); formMarker = null; }
-                fetchApartments();
-            } catch (err) { alert(err.message); } 
-            finally { submitBtn.disabled = false; }
-        });
-
-        window.deleteApartment = async function(id) {
-            if (confirm('Та энэ зарыг устгахдаа итгэлтэй байна уу?')) {
-                await supabaseClient.from('apartments').delete().eq('id', id);
-                fetchApartments();
+            if (error) {
+                alert(error.message)
+            } else {
+                document.getElementById('listing-form').reset()
+                document.getElementById('map-btn-text').innerText = "Байршил сонгох"
+                selectedLat = 47.9188
+                selectedLng = 106.9176
+                await fetchListings()
+                renderListings()
             }
         }
+
+        window.handleDelete = async (id) => {
+            if (!confirm('Та энэ зарыг устгахдаа итгэлтэй байна уу?')) return
+            const { error } = await supabase.from('listings').delete().eq('id', id)
+            if (error) alert(error.message)
+            else {
+                await fetchListings()
+                renderListings()
+            }
+        }
+
+        // FAVORITES
+        function loadFavorites() {
+            favorites = JSON.parse(localStorage.getItem('skillpro_favs') || '[]')
+        }
+
+        window.toggleFavorite = (id) => {
+            if (favorites.includes(id)) {
+                favorites = favorites.filter(favId => favId !== id)
+            } else {
+                favorites.push(id)
+            }
+            localStorage.setItem('skillpro_favs', JSON.stringify(favorites))
+            renderListings()
+        }
+
+        window.toggleFavoriteFilter = () => {
+            filterFavoritesOnly = !filterFavoritesOnly
+            const btn = document.getElementById('filter-fav-btn')
+            const text = document.getElementById('fav-text')
+            if (filterFavoritesOnly) {
+                btn.classList.add('bg-red-600', 'hover:bg-red-700', 'border-red-500')
+                text.innerText = "Зөвхөн Хадгалсан"
+            } else {
+                btn.classList.remove('bg-red-600', 'hover:bg-red-700', 'border-red-500')
+                text.innerText = "Хадгалсан"
+            }
+            renderListings()
+        }
+
+        // RENDERING
+        window.renderListings = () => {
+            const container = document.getElementById('listings-container')
+            const roomFilter = document.getElementById('filter-rooms').value
+
+            let filtered = listings.filter(item => {
+                if (filterFavoritesOnly && !favorites.includes(item.id)) return false
+                if (roomFilter !== 'all') {
+                    if (roomFilter === '4+') return item.rooms >= 4
+                    return item.rooms === parseInt(roomFilter)
+                }
+                return true
+            })
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12 bg-slate-800 rounded-2xl border border-slate-700 text-slate-400">
+                        <i class="fa-solid fa-folder-open text-4xl mb-3 block text-slate-500"></i> Зарууд олдсонгүй.
+                    </div>
+                `
+                return
+            }
+
+            container.innerHTML = filtered.map(item => {
+                const isFav = favorites.includes(item.id)
+                const isOwner = currentUser && currentUser.id === item.user_id
+                const mainImage = item.images && item.images.length > 0 ? item.images[0] : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80'
+
+                return `
+                    <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition duration-200 flex flex-col group relative">
+                        <div class="relative aspect-video w-full overflow-hidden bg-slate-900">
+                            <img src="${mainImage}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            <span class="absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-lg shadow-md uppercase tracking-wider ${item.type === 'Rent' ? 'bg-green-600 text-white' : 'bg-amber-500 text-slate-900'}">
+                                ${item.type === 'Rent' ? 'Түрээс' : 'Худалдана'}
+                            </span>
+                            <button onclick="window.toggleFavorite('${item.id}')" class="absolute top-3 right-3 bg-slate-900/60 hover:bg-slate-900/80 p-2 rounded-xl text-lg backdrop-blur-sm transition cursor-pointer">
+                                <i class="${isFav ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart text-white'}"></i>
+                            </button>
+                        </div>
+                        <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
+                            <div class="space-y-1">
+                                <h4 class="font-bold text-lg text-white line-clamp-1 capitalize">${item.title}</h4>
+                                <p class="text-xl font-black text-blue-400">${item.price.toLocaleString()} ₮</p>
+                                <p class="text-xs text-slate-400 flex items-center gap-1"><i class="fa-solid fa-location-dot text-blue-500"></i> ${item.address}</p>
+                                ${item.description ? `<p class="text-xs text-slate-300 bg-slate-900/50 p-2 rounded-lg line-clamp-3 mt-2 border border-slate-700/40">${item.description}</p>` : ''}
+                            </div>
+                            <div class="flex items-center gap-2 text-xs font-semibold text-slate-300 pt-1">
+                                <span class="bg-slate-700 px-2 py-1 rounded-md border border-slate-600">${item.rooms} өрөө</span>
+                                <span class="bg-slate-700 px-2 py-1 rounded-md border border-slate-600">${item.area} м²</span>
+                            </div>
+                            <div class="pt-2 border-t border-slate-700/50 flex justify-between items-center gap-2">
+                                <a href="tel:${item.phone}" class="text-xs font-bold text-blue-400 hover:underline flex items-center gap-1"><i class="fa-solid fa-phone"></i> ${item.phone}</a>
+                                ${isOwner ? `
+                                    <button onclick="window.handleDelete('${item.id}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer">Устгах</button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `
+            }).join('')
+        }
+
+        init()
     </script>
 </body>
 </html>
